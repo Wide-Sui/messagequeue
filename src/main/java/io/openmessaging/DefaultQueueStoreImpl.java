@@ -198,7 +198,7 @@ public class DefaultQueueStoreImpl extends QueueStore {
             for (int i = 1; i < blocks.size() && size < offset; i++, blockNum++) {
                 size += blocks.get(i).size;
             }
-            //向后退回一个就是要找的block
+            //向后退回一个就是要找的block及其之前的size之和
             size = size - blocks.get(blockNum).size;
 
             for (int i = blockNum; i < blocks.size(); i++) {
@@ -207,6 +207,7 @@ public class DefaultQueueStoreImpl extends QueueStore {
                 int length = blocks.get(i).length;
                 MappedByteBuffer buffer = fileChannel.map(FileChannel.MapMode.READ_WRITE, blocks.get(i).startPosition, length);
                 int sum = 0;
+                //寻找精确的位置，因为一个block里面包含至多十个消息
                 while (sum < length && size < offset) {
                     int len = buffer.getInt();
                     sum += 4;
@@ -250,7 +251,8 @@ public class DefaultQueueStoreImpl extends QueueStore {
     //个人觉得这里应该是只取最后8位，共256个文件吧？？？
     //应该是return queueName.hashCode() & 0x0f;
     int hashFile(String queueName) {
-        return queueName.hashCode() & 0xff;
+        // return queueName.hashCode() & 0xff;
+        return queueName.hashCode() & 0x0f;
         //return 0;
     }
 
